@@ -18,6 +18,8 @@
   const authScreen = document.getElementById("authScreen");
   const appShell = document.getElementById("appShell");
   const courseSelector = document.getElementById("courseSelector");
+  const courseEntryScreen = document.getElementById("courseEntryScreen");
+  const courseEntryGrid = document.getElementById("courseEntryGrid");
   let currentUser = null;
   let authMode = "login";
 
@@ -97,6 +99,18 @@
   function switchCourse(id) {
     const course = courseList.find(item => item.id === id);
     if (!course || course.status !== "available") { toast("该课程题库正在准备中"); renderCourseSelector(); return; }
+    localStorage.setItem("azure-training-course", id);
+    window.location.reload();
+  }
+
+  function showCourseEntry() {
+    authScreen.hidden = true; appShell.hidden = true; courseEntryScreen.hidden = false;
+    courseEntryGrid.innerHTML = courseList.map(course => `<button class="course-entry-card" data-entry-course="${course.id}" ${course.status === "available" ? "" : "disabled"}><strong>${course.code}</strong><span>${course.title} · ${course.status === "available" ? "进入学习" : "题库即将上线"}</span></button>`).join("");
+  }
+
+  function enterSelectedCourse(id) {
+    const course = courseList.find(item => item.id === id);
+    if (!course || course.status !== "available") return;
     localStorage.setItem("azure-training-course", id);
     window.location.reload();
   }
@@ -760,12 +774,12 @@
     const error = document.getElementById("authError");
     if (authMode === "register" && password !== document.getElementById("authPasswordConfirm").value) { error.textContent = "两次输入的密码不一致"; return; }
     error.textContent = "";
-    try { const result = await QuizAuth[authMode](username, password); await enterApp(result.user); }
+    try { const result = await QuizAuth[authMode](username, password); if (!localStorage.getItem("azure-training-course")) showCourseEntry(); else await enterApp(result.user); }
     catch (exception) { error.textContent = exception.message; }
   });
   document.getElementById("logoutButton").addEventListener("click", async () => {
     clearTimeout(saveTimer); await QuizAuth.logout(); currentUser = null; state = structuredClone(defaultState);
-    appShell.hidden = true; authScreen.hidden = false; document.getElementById("authForm").reset();
+    localStorage.removeItem("azure-training-course"); appShell.hidden = true; courseEntryScreen.hidden = true; authScreen.hidden = false; document.getElementById("authForm").reset();
   });
   document.getElementById("modalClose").addEventListener("click", () => modal.hidden = true);
   modal.addEventListener("click", event => { if (event.target === modal) modal.hidden = true; });
@@ -798,19 +812,23 @@
     document.querySelectorAll(".admin-only").forEach(item => item.hidden = !user.isAdmin);
     state = mergeState(await QuizDB.get("progress"));
     applyTheme();
-    authScreen.hidden = true; appShell.hidden = false;
+    authScreen.hidden = true; courseEntryScreen.hidden = true; appShell.hidden = false;
     renderDashboard();
   }
 
   async function init() {
     const session = await QuizAuth.me();
-    if (session.authenticated) await enterApp(session.user);
+    if (session.authenticated) {
+      if (!localStorage.getItem("azure-training-course")) showCourseEntry();
+      else await enterApp(session.user);
+    }
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
       navigator.serviceWorker.register("sw.js").then(registration => registration.update()).catch(() => {});
     }
   }
 
   courseSelector?.addEventListener("change", event => switchCourse(event.target.value));
+  courseEntryGrid?.addEventListener("click", event => { const button = event.target.closest("[data-entry-course]"); if (button) enterSelectedCourse(button.dataset.entryCourse); });
   renderCourseSelector();
   init();
 })();

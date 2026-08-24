@@ -17,6 +17,12 @@
       <form id="authForm"><label>用户名<input id="authUsername" autocomplete="username" minlength="2" required></label><label>密码<input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></label><label id="confirmPasswordRow" hidden>确认密码<input id="authPasswordConfirm" type="password" minlength="6"></label><div class="auth-error" id="authError" role="alert"></div><button class="button primary" id="authSubmit" type="submit">登录</button></form>
     </div>
   </section>
+  <section class="course-entry-screen" id="courseEntryScreen" hidden>
+    <div class="course-entry-panel">
+      <div class="course-entry-heading"><span>Azure Training Platform</span><h1>选择学习课程</h1><p>选择一个认证课程进入学习工作区，之后可以随时切换。</p></div>
+      <div class="course-entry-grid" id="courseEntryGrid"></div>
+    </div>
+  </section>
   <div class="app-shell" id="appShell" hidden>
     <aside class="sidebar" id="sidebar">
       <div class="brand">

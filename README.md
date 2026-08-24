@@ -1,6 +1,6 @@
 # Azure Training Platform
 
-Azure 认证考试刷题平台，当前提供 AI-103 题库，并已预留 DP-300、DP-103 课程入口。
+Azure 认证考试刷题平台，当前提供 AI-103 题库，并已预留 DP-600 课程入口。
 
 ## 目录
 
