@@ -153,6 +153,10 @@ def main():
     # A few OCR layouts merge adjacent dropdowns; use the visible answer-area
     # labels and the discussion's verified selections to restore their groups.
     manual = {
+        74: [
+            ('DataFrame write mode', '("append")', ['("append")', '("error")', '("errorifexists")', '("ignore")', '("overwrite")']),
+            ('mergeSchema option', '("mergeSchema","true")', ['("mergeSchema","false")', '("mergeSchema","true")', '("overwriteSchema","false")', '("overwriteSchema","true")']),
+        ],
         99: [
             ("PeriodDate function", "DATETRUNC", ["DATE_BUCKET", "DATEFROMPARTS", "DATEPART", "DATETRUNC"]),
             ("DayName date part", "weekday", ["day", "dayofyear", "weekday"]),
