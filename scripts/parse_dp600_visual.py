@@ -153,6 +153,45 @@ def main():
     # A few OCR layouts merge adjacent dropdowns; use the visible answer-area
     # labels and the discussion's verified selections to restore their groups.
     manual = {
+        99: [
+            ("PeriodDate function", "DATETRUNC", ["DATE_BUCKET", "DATEFROMPARTS", "DATEPART", "DATETRUNC"]),
+            ("DayName date part", "weekday", ["day", "dayofyear", "weekday"]),
+        ],
+        12: [
+            ("The code embeds an existing Power BI report", "No", ["Yes", "No"]),
+            ("The code creates a Power BI report", "Yes", ["Yes", "No"]),
+            ("The code displays a summary of the DataFrame", "No", ["Yes", "No"]),
+        ],
+        112: [
+            ("The Spark engine will read only the selected columns", "No", ["Yes", "No"]),
+            ("The Year column replaces the OrderDate column in the table", "No", ["Yes", "No"]),
+            ("Adding inferSchema='true' to the options will increase the execution time of the query", "Yes", ["Yes", "No"]),
+        ],
+        123: [
+            ("A replica of dbo.FactSales is created in the test schema by copying the metadata only", "Yes", ["Yes", "No"]),
+            ("Additional schema changes to dbo.FactSales will also apply to test.FactSales", "No", ["Yes", "No"]),
+            ("Additional data changes to dbo.FactSales will also apply to test.FactSales", "No", ["Yes", "No"]),
+        ],
+        131: [
+            ("customers is a pandas DataFrame", "No", ["Yes", "No"]),
+            ("If a delta table named Customers does NOT exist, an error will be generated", "Yes", ["Yes", "No"]),
+            ("The source data is located in the customers folder in a container named contacts", "Yes", ["Yes", "No"]),
+        ],
+        140: [
+            ("definition.pbir is in the PBIR-Legacy format", "No", ["Yes", "No"]),
+            ("The semantic model referenced by definition.pbir is located in the Power BI service", "Yes", ["Yes", "No"]),
+            ("When the related report is opened, Power BI Desktop will open the semantic model in full edit mode", "No", ["Yes", "No"]),
+        ],
+        146: [
+            ("The query excludes sales that have a Status of Cancelled", "Yes", ["Yes", "No"]),
+            ("The query calculates the total sales of each product category for the last 30 days", "Yes", ["Yes", "No"]),
+            ("The query includes product categories that have had zero sales during the last 30 days", "No", ["Yes", "No"]),
+        ],
+        211: [
+            ("Measure1 will return an error if there are no sales for all products", "No", ["Yes", "No"]),
+            ("Measure1 will return a decimal value that represents the ratio of the current product's total sales to the total sales across all products", "Yes", ["Yes", "No"]),
+            ("The denominator of Measure1 will be calculated by using the modified filter context created by REMOVEFILTERS", "Yes", ["Yes", "No"]),
+        ],
         71: [
             ("df", "withColumn", ["cast", "col", "get", "select", "selectExpr", "transform", "withColumn"]),
             ('first function', "col", ["cast", "col", "get", "select", "selectExpr", "transform", "withColumn"]),
