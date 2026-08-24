@@ -6,6 +6,7 @@ __pycache__/
 .env.*
 !.env.example
 storage/
+.run/
 *.sqlite
 *.sqlite3
 *.db
@@ -13,6 +14,7 @@ storage/
 # Generated OCR and browser-test artifacts
 .playwright-cli/
 .tmp-visual-ocr-*/
+tmp/
 ocr/
 output/
 

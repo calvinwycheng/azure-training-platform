@@ -1,6 +1,6 @@
 # Azure Training Platform
 
-Azure 认证考试刷题平台，当前提供 AI-103 题库，并已预留 DP-600 课程入口。
+Azure 认证考试刷题平台，当前提供 AI-103 与 DP-600 题库。
 
 ## 目录
 
@@ -16,7 +16,7 @@ Azure 认证考试刷题平台，当前提供 AI-103 题库，并已预留 DP-60
 docker compose up --build -d
 ```
 
-访问 <http://localhost/>。数据保存在 `azure_training_data` Docker volume 中。
+访问 <http://localhost:5000/>。数据保存在 `azure_training_data` Docker volume 中。镜像为 `calvinwyc/azure-training-platform:1.0.2`。
 
 ## 发布规则
 

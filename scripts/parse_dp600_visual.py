@@ -1,0 +1,212 @@
+import json
+import re
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
+
+
+DATA = Path("src/data/dp600-questions.js")
+OCR = Path("tmp/dp600-ocr-visual")
+
+
+def load_bank():
+    raw = DATA.read_text(encoding="utf-8")
+    prefix = "window.DP600_QUESTION_BANK = "
+    return json.loads(raw[len(prefix):].strip()[:-1])
+
+
+def save_bank(bank):
+    prefix = "window.DP600_QUESTION_BANK = "
+    DATA.write_text(prefix + json.dumps(bank, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
+
+
+def center(box):
+    return ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)
+
+
+def red_bands(image_path):
+    image = np.asarray(Image.open(image_path).convert("RGB"))
+    red = (image[:, :, 0] > 135) & (image[:, :, 0] > image[:, :, 1] * 1.28) & (image[:, :, 0] > image[:, :, 2] * 1.28)
+    rows = np.where(red.sum(axis=1) >= 3)[0]
+    bands = []
+    for row in rows:
+        if not bands or row > bands[-1][-1] + 8:
+            bands.append([int(row)])
+        else:
+            bands[-1].append(int(row))
+    result = []
+    for rows in bands:
+        y1, y2 = rows[0], rows[-1]
+        ys, xs = np.where(red[max(0, y1 - 2):y2 + 3])
+        if len(xs) < 12:
+            continue
+        result.append((int(xs.min()), int(xs.max()), int(y1), int(y2)))
+    return result
+
+
+def ocr_items(path):
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    items = []
+    for text, box in zip(payload.get("rec_texts", []), payload.get("rec_boxes", [])):
+        text = re.sub(r"\s+", " ", str(text)).strip()
+        if not text:
+            continue
+        items.append({"text": text, "box": [float(v) for v in box], "center": center(box)})
+    return items
+
+
+def clean_text(value):
+    return re.sub(r"\s+", " ", value).strip(" -:")
+
+
+def extract_inputs(question):
+    all_items = []
+    for source in question.get("sourceImages", []):
+        name = Path(source).name
+        image_path = OCR / name
+        result_path = OCR / f"{Path(name).stem}_res.json"
+        if not image_path.exists() or not result_path.exists():
+            continue
+        items = ocr_items(result_path)
+        answer_markers = [x["center"][1] for x in items if re.fullmatch(r"Answer Area", x["text"], re.I)]
+        comments_markers = [x["center"][1] for x in items if re.fullmatch(r"Comments", x["text"], re.I)]
+        answer_floor = max(answer_markers, default=0)
+        comments_ceiling = min(comments_markers, default=10**9)
+        for band in red_bands(image_path):
+            xmin, xmax, ymin, ymax = band
+            if ymin <= answer_floor or ymin >= comments_ceiling:
+                continue
+            selected = [x for x in items if xmin - 18 <= x["center"][0] <= xmax + 18 and ymin - 8 <= x["center"][1] <= ymax + 8]
+            selected = [x for x in selected if not re.search(r"Answer Area|Correct Answer|Selected Answer|淘宝|闲鱼|opics|https?://|upvoted", x["text"], re.I)]
+            if not selected:
+                continue
+            band_center = (ymin + ymax) / 2
+            chosen = min(selected, key=lambda x: abs(x["center"][1] - band_center))
+            labels = [x for x in items if x["center"][0] < xmin + 35 and ymin - 140 <= x["center"][1] < ymin - 8 and len(x["text"]) > 8 and not re.search(r"Correct Answer|Answer Area|Selected Answer", x["text"], re.I)]
+            label = max(labels, key=lambda x: x["center"][1]) if labels else None
+            if not label:
+                label = {"text": f"Answer item {len(all_items) + 1}", "center": (xmin, ymin - 20), "box": [xmin, ymin - 30, xmax, ymin - 10]}
+            next_labels = [x for x in items if x["center"][0] < xmin + 35 and x["center"][1] > ymax + 12 and len(x["text"]) > 12]
+            next_y = min((x["center"][1] for x in next_labels), default=ymax + 180)
+            choices = []
+            for item in items:
+                cx, cy = item["center"]
+                if cx < xmin - 25 or cy < label["center"][1] + 12 or cy >= next_y - 4 or cy > ymax + 180:
+                    continue
+                if re.search(r"Answer Area|Correct Answer|Selected Answer|淘宝|闲鱼|opics|Comments|https?://|upvoted", item["text"], re.I):
+                    continue
+                value = clean_text(item["text"])
+                if value and value not in choices:
+                    choices.append(value)
+            all_items.append({"label": clean_text(label["text"]), "answer": clean_text(chosen["text"]), "choices": choices})
+    # Preserve reading order and remove duplicate detections across adjacent pages.
+    unique = []
+    seen = set()
+    for item in all_items:
+        key = (item["label"], item["answer"])
+        if key not in seen:
+            unique.append(item)
+            seen.add(key)
+    return unique
+
+
+def analysis_answers(question):
+    text = question.get("analysis", "")
+    match = re.search(r"(?:我的答案|我选的答案)\s*[:：]?(.+?)(?=\n\s*(?:4\.|官⽅答案|官方答案)|$)", text, re.S)
+    if not match:
+        return []
+    values = []
+    for raw in match.group(1).splitlines():
+        line = re.sub(r"^\s*\d+[.、]\s*", "", clean_text(raw))
+        if not line or len(line) > 180 or re.search(r"分析|正确|错误|原因|比较|一致|答案为", line):
+            continue
+        if "->" in line:
+            label, answer = line.split("->", 1)
+        elif ":" in line:
+            label, answer = line.split(":", 1)
+        else:
+            label, answer = f"Answer item {len(values) + 1}", line
+        answer = clean_text(answer)
+        if answer and answer not in {"Correct Answer", "正确答案"}:
+            values.append((clean_text(label) or f"Answer item {len(values) + 1}", answer))
+    return values[:8]
+
+
+def main():
+    bank = load_bank()
+    found = 0
+    for question in bank["questions"]:
+        if question["type"] != "visual":
+            continue
+        question.pop("visualInputs", None)
+        inputs = extract_inputs(question)
+        if not inputs:
+            inferred = analysis_answers(question)
+            inputs = [{"label": label, "answer": answer, "choices": []} for label, answer in inferred]
+        if not inputs:
+            continue
+        question["visualInputs"] = [{"id": f"item{index}", **item} for index, item in enumerate(inputs, 1)]
+        question["answer"] = [f"item{index}:{item['answer']}" for index, item in enumerate(inputs, 1)]
+        found += 1
+
+    # A few OCR layouts merge adjacent dropdowns; use the visible answer-area
+    # labels and the discussion's verified selections to restore their groups.
+    manual = {
+        71: [
+            ("df", "withColumn", ["cast", "col", "get", "select", "selectExpr", "transform", "withColumn"]),
+            ('first function', "col", ["cast", "col", "get", "select", "selectExpr", "transform", "withColumn"]),
+            ('second function', "cast", ["cast", "col", "get", "select", "selectExpr", "transform", "withColumn"]),
+        ],
+        70: [
+            ("Orchestration pipeline", "A schedule", ["A schedule", "A pipeline Copy activity", "A pipeline Dataflow activity", "A pipeline Stored procedure activity", "A Spark job definition", "An Invoke pipeline activity"]),
+            ("Bronze layer", "A pipeline Copy activity", ["A schedule", "A pipeline Copy activity", "A pipeline Dataflow activity", "A pipeline Stored procedure activity", "A Spark job definition", "An Invoke pipeline activity"]),
+            ("Silver layer", "A pipeline Dataflow activity", ["A schedule", "A pipeline Copy activity", "A pipeline Dataflow activity", "A pipeline Stored procedure activity", "A Spark job definition", "An Invoke pipeline activity"]),
+            ("Gold layer", "A pipeline Stored procedure activity", ["A schedule", "A pipeline Copy activity", "A pipeline Dataflow activity", "A pipeline Stored procedure activity", "A Spark job definition", "An Invoke pipeline activity"]),
+        ],
+        34: [
+            ("Of the transformation steps in the query will fold", "Some", ["All", "None", "Some"]),
+            ("The Added custom step will be performed in", "the Microsoft Power Query engine", ["each lakehouse's query engine", "the Microsoft Power Query engine", "the source lakehouse query engine"]),
+        ],
+        41: [
+            ("The results will form a hierarchy of folders for each partition key", "Yes", ["Yes", "No"]),
+            ("The resulting file partitions can be read in parallel across multiple nodes", "Yes", ["Yes", "No"]),
+            ("The resulting file partitions will use file compression", "Yes", ["Yes", "No"]),
+        ],
+        45: [
+            ("The Spark engine will read only the selected columns", "No", ["Yes", "No"]),
+            ("Removing the partition will reduce the execution time", "No", ["Yes", "No"]),
+            ("Adding inferSchema='true' will increase execution time", "Yes", ["Yes", "No"]),
+        ],
+        53: [
+            ("DataFrame transformation", "df.withColumn", ["df.columns", "df.select", "df.withColumn", "df.withColumnsRenamed"]),
+            ("Date conversion", ".cast('date')", [".alias('date')", ".cast('date')", ".cast('pickupDate')", ".getfield('date')"]),
+            ("Filter expression", 'filter("fareAmount > 0 AND fareAmount < 100")', ['filter("fareAmount > 0 AND fareAmount < 100")', '.filter(col("fareAmount").contains("1..100"))', '.when(df.fareAmount > 0 AND fareAmount < 100)', '.where(df.fareAmount.isin([1,100]))']),
+        ],
+        72: [("File format", "delta", ["delta", "parquet", "csv", "json"]), ("Table name", "sales", ["sales", "files/sales", "tables/sales"])],
+        75: [("ChargedQuantity", "COALESCE", ["COALESCE", "LEAST"]), ("OrderPrice", "LEAST", ["COALESCE", "LEAST"])],
+        102: [("Last-year calculation", "CALCULATE", ["CALCULATE", "CALCULATETABLE", "FILTER"]), ("Return value", "_LYSales", ["_LYSales", "[Total Sales]", "VAR", "RETURN"])],
+        50: [("Connection", "https", ["abfs", "abfss", "https"]), ("Endpoint", "dfs", ["blob", "dfs", "file"])],
+        52: [("The Direct Lake fallback behavior is set to", "Automatic", ["Automatic", "DirectLakeOnly", "DirectQueryOnly"]), ("The query for the table visual is executed by using", "Direct Lake", ["the composite model", "Direct Lake", "Direct Query"])],
+        220: [("DataFrame transformation", "withColumn", ["transform", "withColumn", "withColumnRenamed", "withMetadata"]), ("Year expression", "col", ["col", "extract", "lit", "InvoiceDateKey"])],
+    }
+    for number, values in manual.items():
+        question = next((q for q in bank["questions"] if q["number"] == number), None)
+        if not question:
+            continue
+        question["visualInputs"] = [{"id": f"item{i}", "label": label, "answer": answer, "choices": choices} for i, (label, answer, choices) in enumerate(values, 1)]
+        question["answer"] = [f"item{i}:{answer}" for i, (_, answer, _) in enumerate(values, 1)]
+    # Keep every drag/drop question interactive even when the PDF layout has no
+    # separable OCR candidate boxes: the verified answers remain draggable.
+    for question in bank["questions"]:
+        if question.get("interaction") == "drag-drop" and question.get("visualInputs"):
+            fallback = list(dict.fromkeys(item["answer"] for item in question["visualInputs"] if item.get("answer")))
+            for item in question["visualInputs"]:
+                if not item.get("choices"):
+                    item["choices"] = fallback
+    save_bank(bank)
+    print(f"visual inputs populated for {sum(bool(q.get('visualInputs')) for q in bank['questions'])} questions")
+
+
+if __name__ == "__main__":
+    main()

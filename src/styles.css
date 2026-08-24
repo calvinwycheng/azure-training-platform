@@ -172,7 +172,7 @@ button { color: inherit; }
 .answer-result.wrong { background: var(--red-soft); color: var(--red); }
 .analysis { white-space: pre-line; line-height: 1.7; font-size: 14px; max-height: 560px; overflow: auto; }
 .visual-prompt { margin-top: 18px; }
-.visual-prompt img, .source-image { display: block; width: 100%; height: auto; border: 1px solid var(--line); background: #fff; }
+.visual-prompt img, .source-image { display: block; width: auto; max-width: min(100%, 720px); max-height: 560px; height: auto; object-fit: contain; border: 1px solid var(--line); background: #fff; }
 .visual-self-actions { display:flex; gap:10px; padding:14px 0 4px; }
 .visual-self-result { margin-top:14px; border-radius:6px; padding:12px; font-weight:650; }
 .visual-self-result.correct { background:var(--green-soft); color:var(--green); }
@@ -182,6 +182,7 @@ button { color: inherit; }
 .visual-official-answer span { color:var(--text); font-size:13px; white-space:pre-line; }
 .visual-source { margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
 .visual-source summary { cursor:pointer; font-weight:650; color:var(--muted); }
+.visual-source-title { font-weight:650; color:var(--muted); }
 .visual-inputs { display:grid; gap:10px; margin-top:14px; }
 .visual-input-row { display:grid; grid-template-columns:minmax(180px, 1fr) minmax(220px, 1.2fr); gap:10px; align-items:center; padding:12px; border:1px solid var(--line); border-radius:6px; }
 .visual-input-row > span { font-weight:650; font-size:13px; }

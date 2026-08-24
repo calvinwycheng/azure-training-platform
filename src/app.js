@@ -152,7 +152,7 @@
         <div class="panel">
           <h2>选择练习方式</h2>
           <div class="practice-options">
-            ${practiceOption("all", "顺序练习", "从上次位置继续，覆盖全部 117 题")}
+            ${practiceOption("all", "顺序练习", `从上次位置继续，覆盖全部 ${questions.length} 题`)}
             ${practiceOption("unanswered", "未做题", `${questions.length - m.completed} 道尚未提交的题目`)}
             ${practiceOption("wrong", "错题强化", `${m.wrong} 道当前待复习错题`)}
             ${practiceOption("random20", "随机 20 题", "打乱顺序，适合快速练习")}
@@ -242,7 +242,7 @@
             <div class="question-body">
               ${lang !== "zh" ? `<div class="question-copy">${formatText(question.questionEn)}</div>` : ""}
               ${lang !== "en" ? `<div class="question-copy zh">${formatText(question.questionZh)}</div>` : ""}
-              ${question.type === "visual" ? renderVisualQuestion(question, record, visualImage) : question.type === "grouped" ? renderGroupedOptions(question, selected, record) : renderOptions(question, selected, record)}
+              ${question.type === "visual" ? `${renderVisualSource(question, visualImage)}${renderVisualQuestion(question, record, visualImage)}` : question.type === "grouped" ? renderGroupedOptions(question, selected, record) : renderOptions(question, selected, record)}
               <div class="note-box"><label for="questionNote">个人笔记</label><textarea id="questionNote" data-note-id="${question.id}" placeholder="记录易错点、关键词或复习提示">${escapeHTML(state.notes[question.id] || "")}</textarea></div>
             </div>
             ${renderQuestionActions(question, record, selected)}
@@ -253,7 +253,7 @@
           <h2>答题卡</h2>
           <div class="answer-grid">${currentQueue.map((id, index) => answerCell(id, index)).join("")}</div>
           <div class="legend"><span class="l-answered">已答</span><span class="l-correct">正确</span><span class="l-wrong">错题</span></div>
-          <div class="jump-control"><input id="jumpInput" type="number" min="1" max="117" placeholder="输入题号"><button class="button small" data-action="jump">跳转</button></div>
+          <div class="jump-control"><input id="jumpInput" type="number" min="1" max="${questions.length}" placeholder="输入题号"><button class="button small" data-action="jump">跳转</button></div>
         </aside>
       </div>`;
   }
@@ -269,19 +269,26 @@
           ? `<select data-visual-input="${item.id}" ${record.submitted ? "disabled" : ""}><option value="">请选择</option>${item.choices.map(choice => `<option value="${escapeHTML(choice)}" ${choice === value ? "selected" : ""}>${escapeHTML(choice)}</option>`).join("")}</select>`
           : `<input data-visual-input="${item.id}" value="${escapeHTML(value)}" ${record.submitted ? "disabled" : ""} placeholder="输入答案">`;
         return `<label class="visual-input-row ${record.submitted ? (correct ? "correct" : "incorrect") : ""}"><span>${escapeHTML(item.label)}</span>${control}${record.submitted ? `<small>官方答案：${escapeHTML(item.answer)}</small>` : ""}</label>`;
-      }).join("")}</div><details class="visual-source"><summary>原题图示</summary><div class="visual-prompt"><img src="${visualImage}" alt="第 ${question.number} 题原始题面"></div></details>`;
+      }).join("")}</div>`;
     }
     if (question.visualGroups?.length) {
-      return `${renderGroupedOptions(question, record.selected || [], record)}<details class="visual-source"><summary>原题图示</summary><div class="visual-prompt"><img src="${visualImage}" alt="第 ${question.number} 题原始题面"></div></details>`;
+      return `${renderGroupedOptions(question, record.selected || [], record)}`;
     }
     const result = record.submitted
       ? `<div class="visual-self-result ${record.correct ? "correct" : "wrong"}">${record.correct ? "已标记掌握" : "已加入复习"}</div>`
       : `<div class="visual-self-actions"><button class="button danger" data-self="wrong">加入复习</button><button class="button primary" data-self="correct">标记掌握</button></div>`;
-    return `<div class="answer-area-title"><strong>答题区</strong><span>查看题干和原题图后，根据掌握情况进行自评</span></div><div class="visual-official-answer"><strong>官方答案核对</strong><span>${escapeHTML(officialAnswerSummary(question))}</span></div>${result}<details class="visual-source"><summary>原题图示</summary><div class="visual-prompt"><img src="${visualImage}" alt="第 ${question.number} 题原始题面"></div></details>`;
+    return `<div class="answer-area-title"><strong>答题区</strong><span>查看题干和原题图后，根据掌握情况进行自评</span></div><div class="visual-official-answer"><strong>官方答案核对</strong><span>${escapeHTML(officialAnswerSummary(question))}</span></div>${result}`;
+  }
+
+  function renderVisualSource(question, visualImage) {
+    const images = (question.exhibitImages?.length ? question.exhibitImages : question.sourceImages || []).slice(0, 2);
+    if (!images.length && visualImage) images.push(visualImage);
+    if (!images.length) return "";
+    return `<details class="visual-source"><summary>原题图示（点击展开）</summary>${images.map((src, index) => `<div class="visual-prompt"><img src="${escapeHTML(src)}" alt="第 ${question.number} 题原始题面 ${index + 1}"></div>`).join("")}</details>`;
   }
 
   function isDragDropQuestion(question) {
-    return /^\s*DRAG DROP\b/i.test(question.questionEn || "");
+    return question.interaction === "drag-drop" || /^\s*DRAG DROP\b/i.test(question.questionEn || "");
   }
 
   function visualInputValue(record, item) {
@@ -303,7 +310,7 @@
       return `<div class="drag-answer-row ${record.submitted ? (correct ? "correct" : "incorrect") : ""}"><div class="drag-prompt">${escapeHTML(item.label)}</div>${renderDropZone(item, record)}${record.submitted ? `<small>官方答案：${escapeHTML(item.answer)}</small>` : ""}</div>`;
     }).join("");
     const answerArea = renderDragCodeTemplate(question, record) || slots;
-    return `<div class="answer-area-title"><strong>答题区</strong><span>将左侧候选项拖到右侧对应的答案槽</span></div><div class="drag-drop-board"><section class="drag-pool" aria-label="候选答案"><h3>${poolTitles[question.number] || "Options"}</h3><div class="drag-choice-list">${pool}</div></section><section class="drag-answer-area" aria-label="答案区域"><h3>Answer Area</h3>${answerArea}</section></div><details class="visual-source"><summary>原题图示</summary><div class="visual-prompt"><img src="${visualImage}" alt="第 ${question.number} 题原始题面"></div></details>`;
+    return `<div class="answer-area-title"><strong>答题区</strong><span>将左侧候选项拖到右侧对应的答案槽</span></div><div class="drag-drop-board"><section class="drag-pool" aria-label="候选答案"><h3>${poolTitles[question.number] || "Options"}</h3><div class="drag-choice-list">${pool}</div></section><section class="drag-answer-area" aria-label="答案区域"><h3>Answer Area</h3>${answerArea}</section></div>`;
   }
 
   function renderDropZone(item, record) {
@@ -648,8 +655,8 @@
     if (action === "show-source") return showSource(questionMap.get(currentQueue[currentIndex]));
     if (action === "jump") {
       const value = Number(document.getElementById("jumpInput")?.value);
-      const id = `q-${value}`;
-      if (questionMap.has(id)) startPractice("all", id); else toast("请输入 1 到 117 之间的题号");
+      const id = questions.find(question => question.number === value)?.id;
+      if (questionMap.has(id)) startPractice("all", id); else toast(`请输入 1 到 ${questions.length} 之间的题号`);
       return;
     }
     if (action === "export") return exportProgress();
