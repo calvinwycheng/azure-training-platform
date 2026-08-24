@@ -1,9 +1,9 @@
 services:
   azure-training-platform:
-    image: calvinwyc/azure-training-platform:1.0.2
+    image: calvinwyc/azure-training-platform:1.0.3
     build: .
     ports:
-      - "5000:8000"
+      - "5000:5000"
     environment:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
