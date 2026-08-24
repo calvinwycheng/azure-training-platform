@@ -20,7 +20,7 @@ docker compose up --build -d
 
 ## 发布规则
 
-版本使用 `MAJOR.MINOR.PATCH`，修复或新增课程题库递增 PATCH（例如 `1.0.0` -> `1.0.1`）。每次发布创建 Git tag，推送 GitHub `main`，并推送 `calvinwyc/azure-training-platform:<tag>` 到 Docker Hub。
+版本使用 `MAJOR.MINOR.PATCH`，修复或新增课程题库递增 PATCH。发布前执行 `docker compose up --build -d`，确认 `http://localhost:5000/` 返回 200；提交后使用 `gh auth setup-git` 推送 GitHub `main` 和版本 tag，并推送 `calvinwyc/azure-training-platform:<tag>` 到 Docker Hub。发布完成后再次执行 `docker compose up -d` 保持本地 Docker 服务运行。
 
 ```bash
 docker build -t calvinwyc/azure-training-platform:1.0.0 .
