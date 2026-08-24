@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+
+# Local credentials and runtime data
+.env
+.env.*
+!.env.example
+storage/
+*.sqlite
+*.sqlite3
+*.db
+
+# Generated OCR and browser-test artifacts
+.playwright-cli/
+.tmp-visual-ocr-*/
+ocr/
+output/
+
+# OS metadata
+Thumbs.db
+.DS_Store

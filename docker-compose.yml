@@ -1,0 +1,14 @@
+services:
+  azure-training-platform:
+    image: azure-training-platform:1.0.0
+    build: .
+    ports:
+      - "80:8000"
+    environment:
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+    volumes:
+      - azure_training_data:/app/storage
+    restart: unless-stopped
+volumes:
+  azure_training_data:

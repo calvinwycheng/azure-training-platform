@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.sqlite3
+storage/
+.git/
+.gitignore
+.env
+.env.*
+!.env.example
+.playwright-cli/
+.tmp-visual-ocr-*/
+ocr/
+output/
+Thumbs.db
+.DS_Store

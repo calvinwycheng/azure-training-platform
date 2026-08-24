@@ -1,0 +1,17 @@
+{
+  "name": "Azure Training Platform",
+  "short_name": "Azure Training",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#1565c0",
+  "description": "Azure AI 与数据平台认证刷题、错题复习与学习进度管理",
+  "icons": [
+    {
+      "src": "assets/ai103-logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
