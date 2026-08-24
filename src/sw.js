@@ -1,5 +1,5 @@
-const CACHE = "azure-training-v26";
-const CORE = ["./", "./index.html", "./styles.css?v=19", "./app.js?v=22", "./db.js?v=6", "./data/questions.js?v=17", "./data/dp600-questions.js?v=6", "./data/courses.js?v=2", "./assets/ai103-logo.png"];
+const CACHE = "azure-training-v27";
+const CORE = ["./", "./index.html", "./styles.css?v=19", "./app.js?v=22", "./db.js?v=6", "./data/questions.js?v=17", "./data/dp600-questions.js?v=7", "./data/courses.js?v=2", "./assets/ai103-logo.png"];
 self.addEventListener("install", event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting())));
 self.addEventListener("activate", event => event.waitUntil(
   caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())

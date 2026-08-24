@@ -1,6 +1,6 @@
 services:
   azure-training-platform:
-    image: calvinwyc/azure-training-platform:1.0.7
+    image: calvinwyc/azure-training-platform:1.0.8
     build: .
     ports:
       - "0.0.0.0:5000:5000"
