@@ -153,6 +153,47 @@ def main():
     # A few OCR layouts merge adjacent dropdowns; use the visible answer-area
     # labels and the discussion's verified selections to restore their groups.
     manual = {
+        97: [
+            ('HighestSellingPrice function', 'GREATEST', ['COALESCE', 'GREATEST', 'IIF', 'MAX']),
+            ('TradePrice function', 'COALESCE', ['CHOOSE', 'COALESCE', 'IIF', 'MAX']),
+        ],
+        90: [
+            ('Calculation item function', 'CALCULATE', ['CALCULATE', 'GENERATE', 'MEASURE', 'COMBINEVALUES']),
+            ('Selected measure function', 'SELECTEDMEASURE', ['SELECTEDMEASURE', 'SELECTEDVALUE', 'DATESMTD']),
+        ],
+        82: [
+            ('Create table statement', 'CREATE TABLE dbo.POSCustomers AS SELECT', ['CREATE TABLE dbo.POSCustomers', 'CREATE TABLE dbo.POSCustomers AS CLONE OF', 'CREATE TABLE dbo.POSCustomers AS SELECT']),
+            ('Source table', 'FROM lakehouse1.dbo.customer', ['FROM dbo.Customer', 'FROM dbo.POSCustomers', 'FROM lakehouse1.dbo.customer']),
+        ],
+        110: [
+            ('File format', 'csv', ['csv', 'delta', 'parquet']),
+            ('Storage path', 'labs/productline2', ['labs/productline2', 'Tables/productline2', 'files/productline2']),
+        ],
+        174: [
+            ('Item name conversion', 'try_cast(item_name as varchar(20))', ['convert(varchar(20), item_name)', 'convert(varchar(max), item_name)', 'try_cast(item_name as varchar(20))']),
+            ('Purchase date conversion', 'convert(varchar, purchase_date, 7)', ['convert(varchar, purchase_date, 7)', 'convert(varchar, purchase_date, 109)', 'convert(varchar, purchase_date, 112)']),
+        ],
+        177: [
+            ('JOIN type', 'LEFT OUTER JOIN', ['CROSS JOIN', 'INNER JOIN', 'LEFT OUTER JOIN', 'RIGHT OUTER JOIN']),
+            ('Filter condition', 'HAVING', ['WHERE', 'GROUP BY', 'HAVING']),
+        ],
+        178: [
+            ('First KQL operator', 'extend', ['evaluate', 'extend', 'lookup', 'project', 'summarize']),
+            ('Second KQL operator', 'project', ['evaluate', 'extend', 'lookup', 'project', 'summarize']),
+        ],
+        179: [
+            ('Year expression', 'YEAR', ['CAST', 'CONVERT', 'YEAR']),
+            ('Grouping expression', 'ROLLUP(YEAR(SO.ModifiedDate), P.Name)', ['CUBE(YEAR(SO.ModifiedDate), P.Name)', 'GROUPING SETS (YEAR(SO.ModifiedDate), P.Name)', 'ROLLUP(YEAR(SO.ModifiedDate), P.Name)']),
+        ],
+        183: [
+            ('Formatting feature', 'dynamic format string', ['calculation group', 'data category', 'dynamic format string', 'synonym']),
+            ('Value format', 'percentages or whole numbers', ['percentages only', 'percentages or decimals', 'whole numbers only', 'percentages or whole numbers']),
+        ],
+        191: [
+            ('Top rows syntax', 'Top (3)', ['FETCH NEXT 3 ROWS ONLY', 'Limit (3)', 'Top (3)']),
+            ('Group expression', 'GROUP BY company', ['GROUP BY TaxiCompany', 'GROUP BY company']),
+            ('Order expression', 'ORDER BY sum(tripDistance)', ['ORDER BY tripDistance', 'ORDER BY sum(tripDistance)']),
+        ],
         74: [
             ('DataFrame write mode', '("append")', ['("append")', '("error")', '("errorifexists")', '("ignore")', '("overwrite")']),
             ('mergeSchema option', '("mergeSchema","true")', ['("mergeSchema","false")', '("mergeSchema","true")', '("overwriteSchema","false")', '("overwriteSchema","true")']),
