@@ -37,6 +37,7 @@
   let currentView = "dashboard";
   let currentQueue = questions.map(question => question.id);
   let currentIndex = 0;
+  let answerCardPage = 0;
   let saveTimer = null;
   let activeDragChoice = "";
 
@@ -212,7 +213,7 @@
     renderPractice();
   }
 
-  function renderPractice() {
+  function renderPractice(syncAnswerCard = true) {
     activeDragChoice = "";
     const question = questionMap.get(currentQueue[currentIndex]);
     if (!question) return renderDashboard();
@@ -224,6 +225,12 @@
     const selected = record.selected || [];
     const lang = state.settings.language;
     const progress = (currentIndex + 1) / currentQueue.length * 100;
+    const answerCardPageSize = 100;
+    const answerCardPages = Math.max(1, Math.ceil(currentQueue.length / answerCardPageSize));
+    if (syncAnswerCard) answerCardPage = Math.floor(currentIndex / answerCardPageSize);
+    answerCardPage = Math.min(Math.max(0, answerCardPage), answerCardPages - 1);
+    const answerCardStart = answerCardPage * answerCardPageSize;
+    const answerCardItems = currentQueue.slice(answerCardStart, answerCardStart + answerCardPageSize);
     const visualImage = question.sourceImages[Math.max(0, question.sourceImages.length - 2)];
     content.innerHTML = `
       <div class="quiz-layout">
@@ -251,7 +258,9 @@
         </div>
         <aside class="quiz-side panel">
           <h2>答题卡</h2>
-          <div class="answer-grid">${currentQueue.map((id, index) => answerCell(id, index)).join("")}</div>
+          <div class="answer-card-range">${answerCardStart + 1}-${Math.min(answerCardStart + answerCardPageSize, currentQueue.length)} / ${currentQueue.length}</div>
+          <div class="answer-grid">${answerCardItems.map((id, index) => answerCell(id, answerCardStart + index)).join("")}</div>
+          ${answerCardPages > 1 ? `<div class="answer-card-pagination"><button class="button small" data-answer-card-page="${answerCardPage - 1}" ${answerCardPage === 0 ? "disabled" : ""}>上一页</button><span>${answerCardPage + 1} / ${answerCardPages}</span><button class="button small" data-answer-card-page="${answerCardPage + 1}" ${answerCardPage === answerCardPages - 1 ? "disabled" : ""}>下一页</button></div>` : ""}
           <div class="legend"><span class="l-answered">已答</span><span class="l-correct">正确</span><span class="l-wrong">错题</span></div>
           <div class="jump-control"><input id="jumpInput" type="number" min="1" max="${questions.length}" placeholder="输入题号"><button class="button small" data-action="jump">跳转</button></div>
         </aside>
@@ -666,6 +675,11 @@
         state = structuredClone(defaultState); scheduleSave(); applyTheme(); renderSettings(); toast("学习记录已清空");
       }
       return;
+    }
+    const answerPage = event.target.closest("[data-answer-card-page]")?.dataset.answerCardPage;
+    if (answerPage !== undefined) {
+      answerCardPage = Number(answerPage);
+      return renderPractice(false);
     }
     const self = event.target.closest("[data-self]")?.dataset.self;
     if (self) return submitCurrent(self === "correct");
