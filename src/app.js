@@ -44,6 +44,7 @@
   const escapeHTML = value => String(value ?? "")
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+  const assetURL = source => `/${String(source || "").replace(/^\/+/, "")}?v=11`;
   const formatText = value => escapeHTML(value).replaceAll("\n", "<br>");
   const sameAnswers = (left, right) => [...left].sort().join("") === [...right].sort().join("");
   const answeredRecord = id => state.answers[id] || {};
@@ -293,7 +294,7 @@
     const images = (question.exhibitImages?.length ? question.exhibitImages : question.sourceImages || []).slice(0, 2);
     if (!images.length && visualImage) images.push(visualImage);
     if (!images.length) return "";
-    return `<details class="visual-source"><summary>原题图示（点击展开）</summary>${images.map((src, index) => `<div class="visual-prompt"><img src="${escapeHTML(src)}" alt="第 ${question.number} 题原始题面 ${index + 1}"></div>`).join("")}</details>`;
+    return `<details class="visual-source"><summary>原题图示（点击展开）</summary>${images.map((src, index) => `<div class="visual-prompt"><img src="${escapeHTML(assetURL(src))}" alt="第 ${question.number} 题原始题面 ${index + 1}"></div>`).join("")}</details>`;
   }
 
   function isDragDropQuestion(question) {
@@ -544,12 +545,12 @@
 
   function showCaseImages(id) {
     const item = caseMap.get(id);
-    modalContent.innerHTML = item.sourceImages.map((src, index) => `<img class="source-image" src="${src}" alt="案例原始页 ${index + 1}">`).join("");
+    modalContent.innerHTML = item.sourceImages.map((src, index) => `<img class="source-image" src="${escapeHTML(assetURL(src))}" alt="案例原始页 ${index + 1}">`).join("");
   }
 
   function showSource(question) {
     modalTitle.textContent = `第 ${question.number} 题 · 原题页`;
-    modalContent.innerHTML = question.sourceImages.map((src, index) => `<img class="source-image" src="${src}" alt="第 ${question.number} 题原始页 ${index + 1}">`).join("");
+    modalContent.innerHTML = question.sourceImages.map((src, index) => `<img class="source-image" src="${escapeHTML(assetURL(src))}" alt="第 ${question.number} 题原始页 ${index + 1}">`).join("");
     modal.hidden = false;
   }
 
