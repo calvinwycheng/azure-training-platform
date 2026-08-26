@@ -44,7 +44,7 @@
   const escapeHTML = value => String(value ?? "")
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-  const assetURL = source => `/${String(source || "").replace(/^\/+/, "")}?v=11`;
+  const assetURL = source => `/${String(source || "").replace(/^\/+/, "")}?v=12`;
   const formatText = value => escapeHTML(value).replaceAll("\n", "<br>");
   const sameAnswers = (left, right) => [...left].sort().join("") === [...right].sort().join("");
   const answeredRecord = id => state.answers[id] || {};
