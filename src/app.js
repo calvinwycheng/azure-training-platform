@@ -272,7 +272,8 @@
     if (question.visualInputs?.length) {
       if (isDragDropQuestion(question)) return renderDragDropQuestion(question, record, visualImage);
       const selected = record.selected || [];
-      return `<div class="answer-area-title"><strong>答题区</strong><span>请填写每一项答案后提交</span></div><div class="visual-inputs">${question.visualInputs.map(item => {
+      const context = question.answerContext ? `<pre class="answer-context">${escapeHTML(question.answerContext)}</pre>` : "";
+      return `${context}<div class="answer-area-title"><strong>答题区</strong><span>请填写每一项答案后提交</span></div><div class="visual-inputs">${question.visualInputs.map(item => {
         const value = selected.find(token => token.startsWith(`${item.id}:`))?.slice(item.id.length + 1) || "";
         const correct = record.submitted && normalizeVisualValue(value) === normalizeVisualValue(item.answer);
         const control = item.choices?.length
