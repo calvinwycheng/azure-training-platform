@@ -487,6 +487,18 @@
     renderPractice();
   }
 
+  function retryCourse() {
+    if (!confirm(`确定重新作答 ${activeCourse.code} 的全部 ${questions.length} 道题吗？这将清除本课程的答题、错题和掌握状态，但保留收藏与笔记。`)) return;
+    const preserved = {};
+    questions.forEach(question => { preserved[question.id] = { selected: [], submitted: false, correct: false, wrongCount: 0, correctStreak: 0, mastered: false, attempts: 0 }; });
+    state.answers = preserved;
+    state.history = state.history.filter(item => !questionMap.has(item.id));
+    state.lastQuestionId = questions[0]?.id || state.lastQuestionId;
+    scheduleSave();
+    renderDashboard();
+    toast(`${activeCourse.code} 已重置，可重新作答`);
+  }
+
   function toggleBookmark() {
     const id = currentQueue[currentIndex];
     state.bookmarks = isBookmarked(id) ? state.bookmarks.filter(item => item !== id) : [...state.bookmarks, id];
@@ -573,7 +585,7 @@
     currentView = "settings";
     setTitle("设置与备份");
     setActiveNav("settings");
-    content.innerHTML = `<div class="content-header"><div><h1>设置与备份</h1><p>学习记录保存在当前浏览器；建议定期导出备份。</p></div></div><div class="settings-grid"><section class="panel"><h2>练习设置</h2><div class="setting-row"><div><strong>题干语言</strong><span>控制刷题页的题干显示</span></div><select id="languageSetting"><option value="both" ${state.settings.language === "both" ? "selected" : ""}>中英对照</option><option value="zh" ${state.settings.language === "zh" ? "selected" : ""}>仅中文</option><option value="en" ${state.settings.language === "en" ? "selected" : ""}>仅英文</option></select></div><div class="setting-row"><div><strong>选项顺序</strong><span>打乱后仍按原答案字母判定</span></div><label><input type="checkbox" id="shuffleSetting" ${state.settings.shuffle ? "checked" : ""}> 打乱选项</label></div></section><section class="panel"><h2>数据管理</h2><div class="setting-row"><div><strong>导出学习记录</strong><span>下载 JSON 文件，可用于迁移或恢复</span></div><button class="button" data-action="export">导出</button></div><div class="setting-row"><div><strong>导入学习记录</strong><span>从之前导出的 JSON 文件恢复</span></div><button class="button" data-action="import">导入</button></div><div class="setting-row"><div><strong>清空全部进度</strong><span>删除答题、错题、收藏和笔记</span></div><button class="button danger" data-action="reset">清空</button></div></section></div>`;
+    content.innerHTML = `<div class="content-header"><div><h1>设置与备份</h1><p>学习记录保存在当前浏览器；建议定期导出备份。</p></div></div><div class="settings-grid"><section class="panel"><h2>练习设置</h2><div class="setting-row"><div><strong>题干语言</strong><span>控制刷题页的题干显示</span></div><select id="languageSetting"><option value="both" ${state.settings.language === "both" ? "selected" : ""}>中英对照</option><option value="zh" ${state.settings.language === "zh" ? "selected" : ""}>仅中文</option><option value="en" ${state.settings.language === "en" ? "selected" : ""}>仅英文</option></select></div><div class="setting-row"><div><strong>选项顺序</strong><span>打乱后仍按原答案字母判定</span></div><label><input type="checkbox" id="shuffleSetting" ${state.settings.shuffle ? "checked" : ""}> 打乱选项</label></div></section><section class="panel"><h2>数据管理</h2><div class="setting-row"><div><strong>一键重新作答</strong><span>重置当前学习课程的全部答题状态，保留收藏和笔记</span></div><button class="button danger" data-action="reset-course">重置 ${escapeHTML(activeCourse.code)}</button></div><div class="setting-row"><div><strong>导出学习记录</strong><span>下载 JSON 文件，可用于迁移或恢复</span></div><button class="button" data-action="export">导出</button></div><div class="setting-row"><div><strong>导入学习记录</strong><span>从之前导出的 JSON 文件恢复</span></div><button class="button" data-action="import">导入</button></div><div class="setting-row"><div><strong>清空全部进度</strong><span>删除答题、错题、收藏和笔记</span></div><button class="button danger" data-action="reset">清空</button></div></section></div>`;
   }
 
   function emptyState(title, detail) {
@@ -661,6 +673,7 @@
     if (action === "next") return moveQuestion(1);
     if (action === "submit") return submitCurrent();
     if (action === "retry") return retryCurrent();
+    if (action === "reset-course") return retryCourse();
     if (action === "bookmark") return toggleBookmark();
     if (action === "show-source") return showSource(questionMap.get(currentQueue[currentIndex]));
     if (action === "jump") {
