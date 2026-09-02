@@ -16,7 +16,7 @@ Azure 认证考试刷题平台，当前提供 AI-103 与 DP-600 题库。
 docker compose up --build -d
 ```
 
-访问 <http://localhost:5000/>。数据保存在 `azure_training_data` Docker volume 中。镜像为 `calvinwyc/azure-training-platform:1.0.16`。
+访问 <http://localhost:5000/>。数据保存在 `azure_training_data` Docker volume 中。镜像为 `calvinwyc/azure-training-platform:1.0.17`。
 
 ## 发布规则
 
